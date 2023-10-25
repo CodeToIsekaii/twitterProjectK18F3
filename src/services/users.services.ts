@@ -7,17 +7,23 @@ import { TokenType } from '~/constants/enums'
 
 class UsersService {
   //viết hàm nhận vào user_id để bỏ vào payload tạo access token
-  signAccessToken(user_id: string) {
+  private signAccessToken(user_id: string) {
     return signToken({
       payload: { user_id, token_type: TokenType.AccessToken },
       options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN }
     })
   }
-  signRefreshToken(user_id: string) {
+  private signRefreshToken(user_id: string) {
     return signToken({
       payload: { user_id, token_type: TokenType.RefreshToken },
       options: { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_IN }
     })
+  }
+  //ký access và refresh token
+  //anh ko cần async await vì hàm async bản chất nó dùng return ra 1 cái promise mà bây h cũng return Promise
+  //nên ko cần async await
+  private signAccessTokenAndRefreshToken(user_id: string) {
+    return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
   }
   //viết hàm nhận vào user_id để bỏ vào payload tạo refesh token
   async checkEmailExist(email: string) {
@@ -34,11 +40,13 @@ class UsersService {
     )
     //lấy user_id từ user mới tạo
     const user_id = result.insertedId.toString()
-    const [access_token, refesh_token] = await Promise.all([
-      this.signAccessToken(user_id),
-      this.signRefreshToken(user_id)
-    ])
-    return result
+    const [access_token, refesh_token] = await this.signAccessTokenAndRefreshToken(user_id)
+    return { access_token, refesh_token }
+  }
+  async login(user_id: string) {
+    //dùng user_id tạo access và refresh token
+    const [access_token, refesh_token] = await this.signAccessTokenAndRefreshToken(user_id)
+    return { access_token, refesh_token }
   }
 }
 

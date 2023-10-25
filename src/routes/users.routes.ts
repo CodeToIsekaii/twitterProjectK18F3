@@ -2,9 +2,13 @@ import { Router } from 'express'
 import { register } from 'module'
 import { loginController, registerController } from '~/controllers/users.controllers'
 import { loginValidator, registerValidator } from '~/middlewares/users.middlewares'
+import { wrapAsync } from '~/utils/handlers'
 const usersRouter = Router() //lưu những route liên quan đến user //khai báo Router
-usersRouter.get('/login', loginValidator, loginController)
-usersRouter.post('/register', registerValidator, registerController)
+usersRouter.get('/login', loginValidator, wrapAsync(loginController))
+usersRouter.post('/register', registerValidator, wrapAsync(registerController))
+export default usersRouter
+
+// vào trong file index.ts ta fix
 // //middleware demo (nhạn 3 cái)
 // usersRouter.use(
 //   (req, res, next) => {
@@ -30,5 +34,3 @@ usersRouter.post('/register', registerValidator, registerController)
 //     ]
 //   })
 // }) cái này giống như 1 cái hàm zậy nên em viết zậy là chưa xài đc, mà ai là người xài cái hàm này thằng app là thằng xài bộ route này
-export default usersRouter
-// vào trong file index.ts ta fix
