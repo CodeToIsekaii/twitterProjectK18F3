@@ -6,6 +6,7 @@ import { signToken } from '~/utils/jwt'
 import { TokenType } from '~/constants/enums'
 import { ObjectId } from 'mongodb'
 import RefreshToken from '~/models/schemas/RefreshToken'
+import { USERS_MESSAGES } from '~/constants/message'
 
 class UsersService {
   //viết hàm nhận vào user_id để bỏ vào payload tạo access token
@@ -63,6 +64,10 @@ class UsersService {
       })
     )
     return { access_token, refesh_token }
+  }
+  async logout(refresh_token: string) {
+    await databaseService.refreshToken.deleteOne({ token: refresh_token })
+    return { message: USERS_MESSAGES.LOGOUT_SUCCESS }
   }
 }
 

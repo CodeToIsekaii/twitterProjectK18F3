@@ -31,3 +31,11 @@ export const registerController = async (req: Request<ParamsDictionary, any, Reg
 //   message: 'Register failed',
 //   error
 // })
+
+export const logoutController = async (req: Request, res: Response) => {
+  //lấy refresh_token từ req.body
+  const { refesh_token } = req.body
+  //logout: vào database xóa refresh_token này
+  const result = await usersService.logout(refesh_token)
+  res.json(result)
+}

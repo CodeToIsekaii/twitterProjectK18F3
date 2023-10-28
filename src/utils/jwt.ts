@@ -2,6 +2,8 @@ import { rejects } from 'assert'
 import jwt from 'jsonwebtoken'
 import { resolve } from 'path'
 import { config } from 'dotenv'
+import { error } from 'console'
+import { decode } from 'punycode'
 export const signToken = ({
   payload,
   privateKey = process.env.JWT_SECRET as string,
@@ -15,6 +17,21 @@ export const signToken = ({
     jwt.sign(payload, privateKey, options, (err, token) => {
       if (err) reject(err)
       resolve(token as string)
+    })
+  })
+}
+
+export const verifyToken = ({
+  token,
+  secretOrPublicKey = process.env.JWT_SECRET as string
+}: {
+  token: string
+  secretOrPublicKey?: string
+}) => {
+  return new Promise<jwt.JwtPayload>((resolve, reject) => {
+    jwt.verify(token, secretOrPublicKey, (err, decode) => {
+      if (err) throw reject(err)
+      resolve(decode as jwt.JwtPayload)
     })
   })
 }
