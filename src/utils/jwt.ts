@@ -4,6 +4,7 @@ import { resolve } from 'path'
 import { config } from 'dotenv'
 import { error } from 'console'
 import { decode } from 'punycode'
+import { TokenPayload } from '~/models/requests/User.request'
 export const signToken = ({
   payload,
   privateKey = process.env.JWT_SECRET as string,
@@ -28,10 +29,10 @@ export const verifyToken = ({
   token: string
   secretOrPublicKey?: string
 }) => {
-  return new Promise<jwt.JwtPayload>((resolve, reject) => {
+  return new Promise<TokenPayload>((resolve, reject) => {
     jwt.verify(token, secretOrPublicKey, (err, decode) => {
       if (err) throw reject(err)
-      resolve(decode as jwt.JwtPayload)
+      resolve(decode as TokenPayload)
     })
   })
 }

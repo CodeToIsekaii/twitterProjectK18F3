@@ -3,9 +3,9 @@ import { body, validationResult, ValidationChain } from 'express-validator'
 import { RunnableValidationChains } from 'express-validator/src/middlewares/schema'
 import { EntityError, ErrorWithStatus } from '~/models/Errors'
 
-export const validate = (validations: RunnableValidationChains<ValidationChain>) => {
+export const validate = (validation: RunnableValidationChains<ValidationChain>) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    await validations.run(req)
+    await validation.run(req)
 
     const errors = validationResult(req)
     if (errors.isEmpty()) {
@@ -19,7 +19,7 @@ export const validate = (validations: RunnableValidationChains<ValidationChain>)
       if (msg instanceof ErrorWithStatus && msg.status !== 422) {
         return next(msg)
       }
-      //nếu xuống đc dây thì mày là lỗi 422
+      //nếu xuống đc đây thì mày là lỗi 422
       entityError.errors[key] = msg
     }
     //xử lý lỗi luôn

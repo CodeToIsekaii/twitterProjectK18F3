@@ -1,12 +1,14 @@
 import User from '~/models/schemas/User.schema'
 import databaseService from './database.services'
-import { RegisterReqBody } from '~/models/requests/User.request'
 import { hashPassword } from '~/utils/crypto'
 import { signToken } from '~/utils/jwt'
 import { TokenType } from '~/constants/enums'
+import { config } from 'dotenv'
 import { ObjectId } from 'mongodb'
+import { RegisterReqBody } from '~/models/requests/User.request'
 import RefreshToken from '~/models/schemas/RefreshToken'
 import { USERS_MESSAGES } from '~/constants/message'
+config()
 
 class UsersService {
   //viết hàm nhận vào user_id để bỏ vào payload tạo access token
@@ -16,6 +18,7 @@ class UsersService {
       options: { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_IN }
     })
   }
+  //viết hàm nhận vào user_id để bỏ vào payload tạo refresh token
   private signRefreshToken(user_id: string) {
     return signToken({
       payload: { user_id, token_type: TokenType.RefreshToken },
@@ -28,11 +31,12 @@ class UsersService {
   private signAccessTokenAndRefreshToken(user_id: string) {
     return Promise.all([this.signAccessToken(user_id), this.signRefreshToken(user_id)])
   }
-  //viết hàm nhận vào user_id để bỏ vào payload tạo refesh token
+
   async checkEmailExist(email: string) {
     const user = await databaseService.users.findOne({ email })
     return Boolean(user)
   }
+
   async register(payload: RegisterReqBody) {
     const result = await databaseService.users.insertOne(
       new User({
@@ -41,32 +45,34 @@ class UsersService {
         password: hashPassword(payload.password)
       })
     )
+
     //lấy user_id từ user mới tạo
     const user_id = result.insertedId.toString()
-    const [access_token, refesh_token] = await this.signAccessTokenAndRefreshToken(user_id)
-    //lưu refresh token vào database
-    await databaseService.refreshToken.insertOne(
+    const [access_token, refresh_token] = await this.signAccessTokenAndRefreshToken(user_id)
+    // lưu refresh_token vào database
+    await databaseService.refreshTokens.insertOne(
       new RefreshToken({
-        token: refesh_token,
+        token: refresh_token,
         user_id: new ObjectId(user_id)
       })
     )
-    return { access_token, refesh_token }
+    return { access_token, refresh_token }
   }
+
   async login(user_id: string) {
-    //dùng user_id tạo access và refresh token
-    const [access_token, refesh_token] = await this.signAccessTokenAndRefreshToken(user_id)
-    //lưu refresh token vào database
-    await databaseService.refreshToken.insertOne(
+    const [access_token, refresh_token] = await this.signAccessTokenAndRefreshToken(user_id)
+    // lưu refresh_token vào database
+    await databaseService.refreshTokens.insertOne(
       new RefreshToken({
-        token: refesh_token,
+        token: refresh_token,
         user_id: new ObjectId(user_id)
       })
     )
-    return { access_token, refesh_token }
+    return { access_token, refresh_token }
   }
-  async logout(refresh_token: string) {
-    await databaseService.refreshToken.deleteOne({ token: refresh_token })
+
+  async logout(refesh_token: string) {
+    await databaseService.refreshTokens.deleteOne({ token: refesh_token })
     return { message: USERS_MESSAGES.LOGOUT_SUCCESS }
   }
 }
