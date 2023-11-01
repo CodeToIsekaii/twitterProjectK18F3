@@ -31,5 +31,16 @@ export const USERS_MESSAGES = {
   REFRESH_TOKEN_IS_REQUIRED: 'Refresh token is required',
   REFRESH_TOKEN_IS_INVALID: 'Refresh token is invalid',
   USED_REFRESH_TOKEN_OR_NOT_EXIST: 'Used refresh token not exist',
-  LOGOUT_SUCCESS: 'Logout success'
+  LOGOUT_SUCCESS: 'Logout success',
+  USER_NOT_FOUND: 'User not found',
+  EMAIL_VERYFY_TOKEN_IS_REQUIRED: 'Email verify token is required',
+  USDER_BANNED: 'User banned',
+  EMAIL_VERIFY_TOKEN_NOT_MATCH: 'Email verify token not match',
+  EMAIL_ALREADY_VERIFIED_BEFORE: 'Email already verified before',
+  EMAIL_VERIFY_SUCCESS: 'Email verify success',
+  RESEND_EMAIL_VERIFY_SUCCESS: 'Resend email verify success',
+  CHECK_EMAIL_TO_RESET_PASSWORD: 'Check email to reset password',
+  FORGOT_PASSWORD_TOKEN_IS_REQUIRED: 'Forgot password token is required',
+  FORGOT_PASSWORD_TOKEN_NOT_MATCH: 'Forgot password token not match',
+  VERIFY_FORGOT_PASSWORD_TOKEN_SUCCESS: 'Verify forgot password token success'
 } as const //để k ai chỉnh đc
