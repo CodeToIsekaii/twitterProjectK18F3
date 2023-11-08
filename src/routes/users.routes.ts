@@ -5,13 +5,16 @@ import {
   emailVerifyController,
   forgotPasswordController,
   getMeController,
+  getProfileController,
   loginController,
   logoutController,
   registerController,
   resendEmailVerifyController,
   resetPasswordController,
+  updateMeController,
   verifyForgotPasswordTokenController
 } from '~/controllers/users.controllers'
+import { filterMiddleware } from '~/middlewares/common.middlwares'
 import {
   accessTokenValidator,
   emailVerifyTokenValidator,
@@ -19,9 +22,12 @@ import {
   loginValidator,
   refreshTokenValidator,
   registerValidator,
-  reserPasswordValidator,
+  resetPasswordValidator,
+  updateMeValidator,
+  verifiedUserValidator,
   verifyForgotpasswordTokenValidator
 } from '~/middlewares/users.middlewares'
+import { UpdateMeReqBody } from '~/models/requests/User.request'
 import { wrapAsync } from '~/utils/handlers'
 const usersRouter = Router() //lưu những route liên quan đến user //khai báo Router
 usersRouter.post('/login', loginValidator, wrapAsync(loginController)) //post nhận đc body ,get ko nhận đc body
@@ -79,7 +85,7 @@ body: {forgot_password_token: string, password: string, confirm_password: string
 */
 usersRouter.post(
   '/reset-password',
-  reserPasswordValidator,
+  resetPasswordValidator,
   verifyForgotpasswordTokenValidator,
   wrapAsync(resetPasswordController)
 )
@@ -93,6 +99,32 @@ body: {}
 */
 usersRouter.get('/me', accessTokenValidator, wrapAsync(getMeController))
 
+usersRouter.patch(
+  '/me',
+  accessTokenValidator,
+  verifiedUserValidator,
+  filterMiddleware<UpdateMeReqBody>([
+    'name',
+    'date_of_birth',
+    'bio',
+    'location',
+    'website',
+    'avatar',
+    'username',
+    'cover_photo'
+  ]),
+  updateMeValidator,
+  wrapAsync(updateMeController)
+)
+
+/*
+des: get profile của user khác bằng unsername
+path: '/:username'
+method: get
+không cần header vì, chưa đăng nhập cũng có thể xem
+*/
+usersRouter.get('/:username', wrapAsync(getProfileController))
+//chưa có controller getProfileController, nên bây giờ ta làm
 export default usersRouter
 
 // vào trong file index.ts ta fix
