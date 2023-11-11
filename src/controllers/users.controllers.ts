@@ -6,11 +6,15 @@ import { ParamsDictionary } from 'express-serve-static-core'
 import { ErrorWithStatus } from '~/models/Errors'
 import { ObjectId } from 'mongodb'
 import {
+  ChangePasswordReqBody,
+  FollowReqBody,
   GetProfileReqParams,
   LoginReqBody,
   LogoutReqBody,
+  RefreshTokenReqBody,
   RegisterReqBody,
   TokenPayload,
+  UnfollowReqParams,
   UpdateMeReqBody,
   resetPasswordReqBody
 } from '~/models/requests/User.request'
@@ -156,4 +160,64 @@ export const getProfileController = async (req: Request<GetProfileReqParams>, re
     message: USERS_MESSAGES.GET_PROFILE_SUCCESS,
     result: user
   })
+}
+//usersService.getPorfile(username) nhận vào username tìm và return ra ngoài, hàm này chưa viết giờ ta sẽ viết
+
+export const followController = async (
+  req: Request<ParamsDictionary, any, FollowReqBody>, //đầu tiên định nghĩa lại FollowReqBody vì trong này lấy ra user_id và followed_user_id và thứ 2 phải tạo table follow
+  res: Response,
+  next: NextFunction
+) => {
+  const { user_id } = req.decoded_authorization as TokenPayload //lấy user_id từ decoded_authorization của access_token
+  const { followed_user_id } = req.body //lấy followed_user_id từ req.body
+  const result = await usersService.follow(user_id, followed_user_id) //nhận 2 giá trị tạo document trong table follower //chưa có method này
+  return res.json(result)
+}
+
+export const unfollowController = async (req: Request<UnfollowReqParams>, res: Response, next: NextFunction) => {
+  //anh là ai và muốn unfollow ai, lấy ra user_id người mún thực hiện hành động unfolloư
+  const { user_id } = req.decoded_authorization as TokenPayload //lấy user_id từ decoded_authorization của access_token(người unfollow)
+  // lấy ra người mình muốn unfollow        //vì đã sử dụng params nên cần định nghĩa lại cái params đó
+  const { user_id: followed_user_id } = req.params //lấy user_id từ req.params là user_id của người mà ngta muốn unfollow(người bị unfollow)
+  //gọi hàm unfollow
+  const result = await usersService.unfollow(user_id, followed_user_id) //unfollow chưa làm
+  return res.json(result)
+}
+
+//muốn đổi mật khẩu cần user_id người mình muốn đổi và password mới mà mình muốn đổi
+export const changePasswordController = async (
+  req: Request<ParamsDictionary, any, ChangePasswordReqBody>, //nằm thứ ba vì để chuột vô trong Request ,ReqBody nằm thứ ba
+  res: Response,
+  next: NextFunction
+) => {
+  const { user_id } = req.decoded_authorization as TokenPayload //lấy user_id từ decoded_authorization của access_token
+  const { password } = req.body //lấy old_password và password từ req.body  //lỡ xài body ròi thì lát nhớ đĩnh nghĩa lại Request
+  const result = await usersService.changePassword(user_id, password) //chưa code changePassword
+  return res.json(result)
+}
+
+export const refreshTokenController = async (
+  req: Request<ParamsDictionary, any, RefreshTokenReqBody>, //body nên ở vị tí thứ 3
+  res: Response,
+  next: NextFunction
+) => {
+  // khi qua middleware refreshTokenValidator thì ta đã có decoded_refresh_token
+  //chứa user_id và token_type
+  //ta sẽ lấy user_id để tạo ra access_token và refresh_token mới
+  const { user_id, verify } = req.decoded_refresh_token as TokenPayload //lấy refresh_token từ req.body //tạo ra token mới, mã của người cấp token mới và trạng thái của account đó
+  const { refresh_token } = req.body //lát nhớ đĩnh nghĩa body //giúp tìm document và xóa
+  const result = await usersService.refreshToken({ user_id, refresh_token, verify }) //refreshToken chưa code //{}này do user.services tạo object
+  return res.json({
+    message: USERS_MESSAGES.REFRESH_TOKEN_SUCCESS, //message.ts thêm  REFRESH_TOKEN_SUCCESS: 'Refresh token success',
+    result
+  })
+}
+
+export const oAuthController = async (req: Request, res: Response, next: NextFunction) => {
+  const { code } = req.query // lấy code từ query params
+  //tạo đường dẫn truyền thông tin result để sau khi họ chọn tại khoản, ta check (tạo | login) xong thì điều hướng về lại client kèm thông tin at và rf
+  const { access_token, refresh_token, new_user } = await usersService.oAuth(code as string)
+  //truyền ngược đường dẫn này cho client, mình gửi cho nó access refress và trạng thái để nó lưu lại
+  const urlRedirect = `${process.env.CLIENT_REDIRECT_CALLBACK}?access_token=${access_token}&refresh_token=${refresh_token}&new_user=${new_user}`
+  return res.redirect(urlRedirect)
 }
