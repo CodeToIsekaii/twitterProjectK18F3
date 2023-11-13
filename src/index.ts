@@ -5,8 +5,9 @@ import { defaultErrorHandler } from './middlewares/error.middlewares'
 import mediasRouter from './routes/medias.routes'
 import { initFolder } from './utils/file'
 import { config } from 'dotenv' //vì xài process nên nhớ import cái này
-import { UPLOAD_DIR } from './constants/dir'
+import { UPLOAD_IMAGE_DIR, UPLOAD_VIDEO_DIR } from './constants/dir'
 import staticRouter from './routes/static.routes'
+import { MongoClient } from 'mongodb'
 config()
 
 const app = express()
@@ -16,7 +17,9 @@ const app = express()
 const PORT = process.env.PORT || 4000 //server chay trên post 4000// server là nơi giao tiếp với database, xử lý các tính năng
 app.use(express.json())
 initFolder()
-databaseService.connect()
+databaseService.connect().then(() => {
+  databaseService.indexUsers()
+})
 //localhost:4000/
 app.get('/', (req, res) => {
   res.send('Hello World!')
@@ -24,7 +27,7 @@ app.get('/', (req, res) => {
 
 app.use('/users', usersRouter) //localhost:4000/users/register
 app.use('/medias', mediasRouter) //route handler
-// app.use('/static', express.static(UPLOAD_DIR)) //nếu muốn thêm tiền tố, ta sẽ làm thế này
+// app.use('/static/video', express.static(UPLOAD_VIDEO_DIR)) //nếu muốn thêm tiền tố, ta sẽ làm thế này
 app.use('/static', staticRouter)
 
 app.use(defaultErrorHandler)

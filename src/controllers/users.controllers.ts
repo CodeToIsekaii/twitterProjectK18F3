@@ -204,9 +204,9 @@ export const refreshTokenController = async (
   // khi qua middleware refreshTokenValidator thì ta đã có decoded_refresh_token
   //chứa user_id và token_type
   //ta sẽ lấy user_id để tạo ra access_token và refresh_token mới
-  const { user_id, verify } = req.decoded_refresh_token as TokenPayload //lấy refresh_token từ req.body //tạo ra token mới, mã của người cấp token mới và trạng thái của account đó
+  const { user_id, verify, exp } = req.decoded_refresh_token as TokenPayload //lấy refresh_token từ req.body //tạo ra token mới, mã của người cấp token mới và trạng thái của account đó
   const { refresh_token } = req.body //lát nhớ đĩnh nghĩa body //giúp tìm document và xóa
-  const result = await usersService.refreshToken({ user_id, refresh_token, verify }) //refreshToken chưa code //{}này do user.services tạo object
+  const result = await usersService.refreshToken({ user_id, refresh_token, verify, exp }) //refreshToken chưa code //{}này do user.services tạo object
   return res.json({
     message: USERS_MESSAGES.REFRESH_TOKEN_SUCCESS, //message.ts thêm  REFRESH_TOKEN_SUCCESS: 'Refresh token success',
     result
